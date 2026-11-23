@@ -55,7 +55,7 @@ select{min-width:190px;cursor:pointer;background:#fff}label{font-weight:750}
 </div>
 <div class="row"><button id="start" class="primary">Начать игру 🚀</button><span class="muted" id="selectedTopicLabel">Выбраны все темы</span></div>
 </section>
-<section class="card game-card" id="game">
+<section class="card game-card hidden" id="game">
 <div class="game-top"><span id="counter" class="counter-pill">Готов к приключению?</span><span id="score" class="score-pill">⭐ Верно: 0</span></div><div class="progress"><i id="bar"></i></div>
 <div id="prompt" class="question">Нажми «Начать игру»</div>
 <div id="answers" class="answers"></div>
@@ -92,8 +92,8 @@ function makeTask(topic){
  return {topic,q,ans,exp};
 }
 function optionsFor(t){if(t.topic==='compare')return ['<','=','>','?'].sort(()=>Math.random()-.5);let vals=new Set([Number(t.ans)]);while(vals.size<4){let d=int(-10,10);vals.add(Math.max(0,Number(t.ans)+d))}return [...vals].sort(()=>Math.random()-.5)}
-function start(){tasks=Array.from({length:10},()=>makeTask(selectedTopic));idx=0;correct=0;$('next').textContent='Следующее ➜';showTask()}
-function startWeak(){let w=data.weak||[];if(!w.length){$('feedback').className='feedback good';$('feedback').textContent='🎉 Пока нет сложных заданий. Продолжай тренироваться!';return}tasks=w.slice(-10).reverse().map(x=>x.q!==undefined?x:makeTask(x.topic));idx=0;correct=0;$('next').textContent='Следующее ➜';showTask()}
+function start(){tasks=Array.from({length:10},()=>makeTask(selectedTopic));idx=0;correct=0;$('game').classList.remove('hidden');$('next').textContent='Следующее ➜';showTask()}
+function startWeak(){let w=data.weak||[];if(!w.length){$('game').classList.remove('hidden');$('feedback').className='feedback good';$('feedback').textContent='🎉 Пока нет сложных заданий. Продолжай тренироваться!';return}tasks=w.slice(-10).reverse().map(x=>x.q!==undefined?x:makeTask(x.topic));idx=0;correct=0;$('game').classList.remove('hidden');$('next').textContent='Следующее ➜';showTask()}
 function showTask(){answered=false;$('feedback').className='feedback hidden';$('feedback').textContent='';$('next').disabled=true;$('counter').textContent='Задание '+(idx+1)+' из '+tasks.length;$('score').textContent='⭐ Верно: '+correct;$('bar').style.width=(idx/tasks.length*100)+'%';let t=tasks[idx];$('prompt').textContent=t.q;$('answers').innerHTML='';
  if(mode==='choice'){optionsFor(t).forEach(v=>addAnswer(v))}else{let input=document.createElement('input');input.id='typed';input.inputMode='decimal';input.autocomplete='off';input.placeholder='Впиши ответ';input.style='width:100%;font:800 25px system-ui;text-align:center;padding:15px;border:2px solid #e5defb;border-radius:16px;grid-column:1/-1;background:#fff';$('answers').append(input);input.addEventListener('keydown',e=>{if(e.key==='Enter')check(input.value)});let b=document.createElement('button');b.className='primary';b.textContent='Проверить ответ ✓';b.style.gridColumn='1/-1';b.onclick=()=>check(input.value.trim());$('answers').append(b);setTimeout(()=>input.focus(),60)}
 }
