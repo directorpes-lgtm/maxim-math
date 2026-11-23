@@ -17,6 +17,12 @@ button:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 6px 14px #70
 button.primary{background:linear-gradient(120deg,#704cff,#9564ff);border-color:transparent;color:white;font-weight:850;box-shadow:0 6px 14px #704cff30}
 .mode{font-weight:750;background:#faf9ff}.mode.active{border-color:var(--purple);background:#f0ebff;color:#5734dc;box-shadow:inset 0 0 0 1px var(--purple)}
 select{min-width:190px;cursor:pointer;background:#fff}label{font-weight:750}
+.topic-choices{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;margin:2px 0 14px}
+.topic-choice{display:flex;align-items:center;justify-content:center;gap:7px;min-height:52px;padding:11px 10px;border-radius:15px;background:#fbfaff;border:2px solid #ece7fb;font-weight:800;text-align:center}
+.topic-choice.active{background:linear-gradient(120deg,#f0ebff,#fff0f6);border-color:var(--purple);color:#5938d7;box-shadow:inset 0 0 0 1px var(--purple)}
+.topic-choice .topic-icon{font-size:20px}
+@media(max-width:560px){.topic-choices{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.topic-choice{min-height:50px;font-size:14px;padding:9px 6px}}
+
 .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.stat{background:linear-gradient(145deg,#f8f5ff,#fff);border:1px solid var(--line);border-radius:17px;padding:13px}.stat b{display:block;font-size:26px;line-height:1.2;color:#5734dc}.stat span{font-size:13px;color:var(--muted)}
 .game-card{border:2px solid #e9e1ff;background:linear-gradient(160deg,#fff 0%,#fbf9ff 100%)}.game-top{display:flex;justify-content:space-between;gap:12px;align-items:center;font-weight:800}.counter-pill{background:#f0ebff;color:#5938d7;border-radius:999px;padding:7px 12px}.score-pill{color:#a16a00;background:#fff6d8;border-radius:999px;padding:7px 12px}
 .progress{height:13px;background:#eeeafd;border-radius:99px;overflow:hidden;margin:13px 0 20px}.progress i{display:block;height:100%;width:0;background:linear-gradient(90deg,#6e4aff,#ff75a8,#ffd65a);border-radius:99px;transition:width .35s ease}
@@ -38,7 +44,16 @@ select{min-width:190px;cursor:pointer;background:#fff}label{font-weight:750}
 <section class="card">
 <h2>🎮 Выбери тренировку</h2>
 <div class="row" style="margin-bottom:13px"><button class="mode active" data-mode="ten">✏️ 10 заданий</button><button class="mode" data-mode="choice">🎯 4 варианта ответа</button><button id="weakBtn" class="secondary">🔁 Повторить сложное</button></div>
-<div class="row"><label for="topic">Тема:</label><select id="topic"><option value="mix">🌈 Все темы</option><option value="add">➕ Сложение до 100</option><option value="sub">➖ Вычитание до 100</option><option value="compare">⚖️ Сравнение чисел</option><option value="multiply">✖️ Умножение</option><option value="word">📖 Текстовые задачи</option></select><button id="start" class="primary">Начать игру 🚀</button></div>
+<h2 style="font-size:16px;margin:2px 0 9px">📚 Выбери тему</h2>
+<div class="topic-choices" id="topicChoices">
+<button type="button" class="topic-choice active" data-topic="mix" aria-pressed="true"><span class="topic-icon">🌈</span> Все темы</button>
+<button type="button" class="topic-choice" data-topic="add" aria-pressed="false"><span class="topic-icon">➕</span> Сложение</button>
+<button type="button" class="topic-choice" data-topic="sub" aria-pressed="false"><span class="topic-icon">➖</span> Вычитание</button>
+<button type="button" class="topic-choice" data-topic="compare" aria-pressed="false"><span class="topic-icon">⚖️</span> Сравнение</button>
+<button type="button" class="topic-choice" data-topic="multiply" aria-pressed="false"><span class="topic-icon">✖️</span> Умножение</button>
+<button type="button" class="topic-choice" data-topic="word" aria-pressed="false"><span class="topic-icon">📖</span> Задачи</button>
+</div>
+<div class="row"><button id="start" class="primary">Начать игру 🚀</button><span class="muted" id="selectedTopicLabel">Выбраны все темы</span></div>
 </section>
 <section class="card game-card" id="game">
 <div class="game-top"><span id="counter" class="counter-pill">Готов к приключению?</span><span id="score" class="score-pill">⭐ Верно: 0</span></div><div class="progress"><i id="bar"></i></div>
@@ -56,7 +71,7 @@ select{min-width:190px;cursor:pointer;background:#fff}label{font-weight:750}
 <script>
 const names={add:'Сложение',sub:'Вычитание',compare:'Сравнение',multiply:'Умножение',word:'Задачи'};
 const $=id=>document.getElementById(id);
-let mode='ten',tasks=[],idx=0,correct=0,answered=false;
+let mode='ten',tasks=[],idx=0,correct=0,answered=false,selectedTopic='mix';
 let data;
 try{data=JSON.parse(localStorage.getItem('maximMathProgress')||'{}')}catch(e){data={}}
 data={total:0,correct:0,streak:0,topics:{},weak:[],xp:0,stars:0,unlocked:[],...data};
@@ -77,7 +92,7 @@ function makeTask(topic){
  return {topic,q,ans,exp};
 }
 function optionsFor(t){if(t.topic==='compare')return ['<','=','>','?'].sort(()=>Math.random()-.5);let vals=new Set([Number(t.ans)]);while(vals.size<4){let d=int(-10,10);vals.add(Math.max(0,Number(t.ans)+d))}return [...vals].sort(()=>Math.random()-.5)}
-function start(){tasks=Array.from({length:10},()=>makeTask($('topic').value));idx=0;correct=0;$('next').textContent='Следующее ➜';showTask()}
+function start(){tasks=Array.from({length:10},()=>makeTask(selectedTopic));idx=0;correct=0;$('next').textContent='Следующее ➜';showTask()}
 function startWeak(){let w=data.weak||[];if(!w.length){$('feedback').className='feedback good';$('feedback').textContent='🎉 Пока нет сложных заданий. Продолжай тренироваться!';return}tasks=w.slice(-10).reverse().map(x=>x.q!==undefined?x:makeTask(x.topic));idx=0;correct=0;$('next').textContent='Следующее ➜';showTask()}
 function showTask(){answered=false;$('feedback').className='feedback hidden';$('feedback').textContent='';$('next').disabled=true;$('counter').textContent='Задание '+(idx+1)+' из '+tasks.length;$('score').textContent='⭐ Верно: '+correct;$('bar').style.width=(idx/tasks.length*100)+'%';let t=tasks[idx];$('prompt').textContent=t.q;$('answers').innerHTML='';
  if(mode==='choice'){optionsFor(t).forEach(v=>addAnswer(v))}else{let input=document.createElement('input');input.id='typed';input.inputMode='decimal';input.autocomplete='off';input.placeholder='Впиши ответ';input.style='width:100%;font:800 25px system-ui;text-align:center;padding:15px;border:2px solid #e5defb;border-radius:16px;grid-column:1/-1;background:#fff';$('answers').append(input);input.addEventListener('keydown',e=>{if(e.key==='Enter')check(input.value)});let b=document.createElement('button');b.className='primary';b.textContent='Проверить ответ ✓';b.style.gridColumn='1/-1';b.onclick=()=>check(input.value.trim());$('answers').append(b);setTimeout(()=>input.focus(),60)}
@@ -102,6 +117,8 @@ function renderStats(){
 }
 function speak(){let t=tasks[idx];if(!t)return;let u=new SpeechSynthesisUtterance(t.q);u.lang='ru-RU';speechSynthesis.cancel();speechSynthesis.speak(u)}
 document.querySelectorAll('.mode').forEach(b=>b.onclick=()=>{mode=b.dataset.mode;document.querySelectorAll('.mode').forEach(x=>x.classList.toggle('active',x===b));$('answers').innerHTML='';$('feedback').className='feedback hidden';$('prompt').textContent='Режим выбран. Нажми «Начать игру»!'});
+const topicLabels={mix:'Выбраны все темы',add:'Сложение до 100',sub:'Вычитание до 100',compare:'Сравнение чисел',multiply:'Умножение',word:'Текстовые задачи'};
+document.querySelectorAll('.topic-choice').forEach(b=>b.onclick=()=>{selectedTopic=b.dataset.topic;document.querySelectorAll('.topic-choice').forEach(x=>{const active=x===b;x.classList.toggle('active',active);x.setAttribute('aria-pressed',String(active))});$('selectedTopicLabel').textContent=topicLabels[selectedTopic];});
 $('start').onclick=start;$('weakBtn').onclick=startWeak;$('next').onclick=next;$('speak').onclick=speak;
 $('reset').onclick=()=>{if(confirm('Точно сбросить весь прогресс и звёзды?')){data={total:0,correct:0,streak:0,topics:{},weak:[],xp:0,stars:0,unlocked:[]};streak=0;save()}};
 renderStats();
