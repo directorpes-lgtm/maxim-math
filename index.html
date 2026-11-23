@@ -76,7 +76,7 @@ function makeTask(topic){
  if(topic==='word'){let apples=int(12,35),more=int(3,15);q='У Максима было '+apples+' наклеек. Ему подарили ещё '+more+'. Сколько стало?';ans=apples+more;exp='Наклеек стало больше, значит складываем: '+apples+' + '+more+' = '+ans+'.'}
  return {topic,q,ans,exp};
 }
-function optionsFor(t){if(t.topic==='compare')return ['<','=','>'].sort(()=>Math.random()-.5);let vals=new Set([Number(t.ans)]);while(vals.size<4){let d=int(-10,10);vals.add(Math.max(0,Number(t.ans)+d))}return [...vals].sort(()=>Math.random()-.5)}
+function optionsFor(t){if(t.topic==='compare')return ['<','=','>','?'].sort(()=>Math.random()-.5);let vals=new Set([Number(t.ans)]);while(vals.size<4){let d=int(-10,10);vals.add(Math.max(0,Number(t.ans)+d))}return [...vals].sort(()=>Math.random()-.5)}
 function start(){tasks=Array.from({length:10},()=>makeTask($('topic').value));idx=0;correct=0;$('next').textContent='Следующее ➜';showTask()}
 function startWeak(){let w=data.weak||[];if(!w.length){$('feedback').className='feedback good';$('feedback').textContent='🎉 Пока нет сложных заданий. Продолжай тренироваться!';return}tasks=w.slice(-10).reverse().map(x=>x.q!==undefined?x:makeTask(x.topic));idx=0;correct=0;$('next').textContent='Следующее ➜';showTask()}
 function showTask(){answered=false;$('feedback').className='feedback hidden';$('feedback').textContent='';$('next').disabled=true;$('counter').textContent='Задание '+(idx+1)+' из '+tasks.length;$('score').textContent='⭐ Верно: '+correct;$('bar').style.width=(idx/tasks.length*100)+'%';let t=tasks[idx];$('prompt').textContent=t.q;$('answers').innerHTML='';
