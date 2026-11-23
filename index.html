@@ -52,6 +52,7 @@ select{min-width:190px;cursor:pointer;background:#fff}label{font-weight:750}
 <button type="button" class="topic-choice" data-topic="compare" aria-pressed="false"><span class="topic-icon">⚖️</span> Сравнение</button>
 <button type="button" class="topic-choice" data-topic="multiply" aria-pressed="false"><span class="topic-icon">✖️</span> Умножение</button>
 <button type="button" class="topic-choice" data-topic="word" aria-pressed="false"><span class="topic-icon">📖</span> Задачи</button>
+<button type="button" class="topic-choice" data-topic="logic" aria-pressed="false"><span class="topic-icon">🧠</span> Логика</button>
 </div>
 <div class="row"><button id="start" class="primary">Начать игру 🚀</button><span class="muted" id="selectedTopicLabel">Выбраны все темы</span></div>
 </section>
@@ -69,7 +70,7 @@ select{min-width:190px;cursor:pointer;background:#fff}label{font-weight:750}
 <div class="foot">Каждая решённая задача делает тебя сильнее! 💜</div>
 </main>
 <script>
-const names={add:'Сложение',sub:'Вычитание',compare:'Сравнение',multiply:'Умножение',word:'Задачи'};
+const names={add:'Сложение',sub:'Вычитание',compare:'Сравнение',multiply:'Умножение',word:'Задачи',logic:'Логика'};
 const $=id=>document.getElementById(id);
 let mode='ten',tasks=[],idx=0,correct=0,answered=false,selectedTopic='mix';
 let data;
@@ -82,16 +83,24 @@ function save(){localStorage.setItem('maximMathProgress',JSON.stringify(data));r
 function rand(n){return Math.floor(Math.random()*n)}
 function int(a,b){return a+rand(b-a+1)}
 function makeTask(topic){
- if(topic==='mix')topic=['add','sub','compare','multiply','word'][rand(5)];
- let a,b,q,ans,exp;
+ if(topic==='mix')topic=['add','sub','compare','multiply','word','logic'][rand(6)];
+ let a,b,q,ans,exp,choices;
  if(topic==='add'){a=int(11,69);b=int(11,Math.min(89,100-a));q=a+' + '+b+' = ?';ans=a+b;exp='Складываем десятки и единицы: '+a+' + '+b+' = '+ans+'.'}
  if(topic==='sub'){a=int(20,100);b=int(11,a-1);q=a+' − '+b+' = ?';ans=a-b;exp='Вычитаем: '+a+' − '+b+' = '+ans+'.'}
  if(topic==='compare'){a=int(1,100);b=int(1,100);q=a+'　□　'+b+'　(вставь знак)';ans=a>b?'>':a<b?'<':'=';exp='Сравниваем числа: '+a+' '+ans+' '+b+'.'}
  if(topic==='multiply'){a=int(2,9);b=int(2,5);q=a+' × '+b+' = ?';ans=a*b;exp=a+' × '+b+' означает '+a+' сложить '+b+' раз: '+Array(b).fill(a).join(' + ')+' = '+ans+'.'}
  if(topic==='word'){let apples=int(12,35),more=int(3,15);q='У Максима было '+apples+' наклеек. Ему подарили ещё '+more+'. Сколько стало?';ans=apples+more;exp='Наклеек стало больше, значит складываем: '+apples+' + '+more+' = '+ans+'.'}
- return {topic,q,ans,exp};
+ if(topic==='logic'){
+  const kind=rand(4);
+  if(kind===0){const step=[2,3,4,5][rand(4)],first=int(1,8),seq=[first,first+step,first+2*step];ans=first+3*step;q='Продолжи ряд: '+seq.join(', ')+', … Какое число дальше?';choices=[ans,ans+step,ans-1,ans+2*step].map(String);exp='Каждый раз прибавляем '+step+'. Следующее число: '+seq[2]+' + '+step+' = '+ans+'.'}
+  if(kind===1){const start=[1,2,3][rand(3)],seq=[start,start*2,start*4];ans=seq[2]*2;q='Найди продолжение: '+seq.join(', ')+', …';choices=[ans,ans+2,ans-2,ans*2].map(String);exp='Каждое следующее число в два раза больше предыдущего: '+seq[2]+' × 2 = '+ans+'.'}
+  if(kind===2){const sets=[{q:'Какое слово лишнее: яблоко, груша, морковь, слива?',ans:'Морковь',choices:['Морковь','Яблоко','Груша','Слива'],exp:'Морковь это овощ, а остальные слова обозначают фрукты.'},{q:'Что лишнее: автобус, трамвай, велосипед, огурец?',ans:'Огурец',choices:['Огурец','Автобус','Трамвай','Велосипед'],exp:'Огурец не является транспортом, остальные помогают передвигаться.'},{q:'Что лишнее: квадрат, круг, треугольник, берёза?',ans:'Берёза',choices:['Берёза','Квадрат','Круг','Треугольник'],exp:'Берёза это дерево, а остальные это геометрические фигуры.'}];const s=sets[rand(sets.length)];q=s.q;ans=s.ans;choices=s.choices;exp=s.exp;}
+  if(kind===3){const puzzles=[{q:'У Маши два брата. У каждого брата есть одна сестра Маша. Сколько всего детей в семье?',ans:'3',choices:['3','2','4','5'],exp:'Это Маша и два её брата. Сестра у братьев одна и та же, поэтому всего трое детей.'},{q:'Аня выше Бори, а Боря выше Вани. Кто ниже всех?',ans:'Ваня',choices:['Ваня','Боря','Аня','Нельзя узнать'],exp:'Аня выше Бори, а Боря выше Вани. Значит, ниже всех Ваня.'},{q:'У Пети 3 красных кубика и 2 синих. Каких кубиков больше?',ans:'Красных',choices:['Красных','Синих','Поровну','Нельзя узнать'],exp:'Сравниваем 3 и 2. Три больше двух, значит красных кубиков больше.'}];const p=puzzles[rand(puzzles.length)];q=p.q;ans=p.ans;choices=p.choices;exp=p.exp;}
+ }
+ return {topic,q,ans,exp,choices};
 }
-function optionsFor(t){if(t.topic==='compare')return ['<','=','>','?'].sort(()=>Math.random()-.5);let vals=new Set([Number(t.ans)]);while(vals.size<4){let d=int(-10,10);vals.add(Math.max(0,Number(t.ans)+d))}return [...vals].sort(()=>Math.random()-.5)}
+function optionsFor(t){if(t.choices)return [...t.choices].sort(()=>Math.random()-.5);if(t.topic==='compare')return ['<','=','>','?'].sort(()=>Math.random()-.5);let vals=new Set([Number(t.ans)]);while(vals.size<4){let d=int(-10,10);vals.add(Math.max(0,Number(t.ans)+d))}return [...vals].sort(()=>Math.random()-.5)}
+
 function start(){tasks=Array.from({length:10},()=>makeTask(selectedTopic));idx=0;correct=0;$('game').classList.remove('hidden');$('next').textContent='Следующее ➜';showTask()}
 function startWeak(){let w=data.weak||[];if(!w.length){$('game').classList.remove('hidden');$('feedback').className='feedback good';$('feedback').textContent='🎉 Пока нет сложных заданий. Продолжай тренироваться!';return}tasks=w.slice(-10).reverse().map(x=>x.q!==undefined?x:makeTask(x.topic));idx=0;correct=0;$('game').classList.remove('hidden');$('next').textContent='Следующее ➜';showTask()}
 function showTask(){answered=false;$('feedback').className='feedback hidden';$('feedback').textContent='';$('next').disabled=true;$('counter').textContent='Задание '+(idx+1)+' из '+tasks.length;$('score').textContent='⭐ Верно: '+correct;$('bar').style.width=(idx/tasks.length*100)+'%';let t=tasks[idx];$('prompt').textContent=t.q;$('answers').innerHTML='';
@@ -117,7 +126,7 @@ function renderStats(){
 }
 function speak(){let t=tasks[idx];if(!t)return;let u=new SpeechSynthesisUtterance(t.q);u.lang='ru-RU';speechSynthesis.cancel();speechSynthesis.speak(u)}
 document.querySelectorAll('.mode').forEach(b=>b.onclick=()=>{mode=b.dataset.mode;document.querySelectorAll('.mode').forEach(x=>x.classList.toggle('active',x===b));$('answers').innerHTML='';$('feedback').className='feedback hidden';$('prompt').textContent='Режим выбран. Нажми «Начать игру»!'});
-const topicLabels={mix:'Выбраны все темы',add:'Сложение до 100',sub:'Вычитание до 100',compare:'Сравнение чисел',multiply:'Умножение',word:'Текстовые задачи'};
+const topicLabels={mix:'Выбраны все темы',add:'Сложение до 100',sub:'Вычитание до 100',compare:'Сравнение чисел',multiply:'Умножение',word:'Текстовые задачи',logic:'Логические задачи'};
 document.querySelectorAll('.topic-choice').forEach(b=>b.onclick=()=>{selectedTopic=b.dataset.topic;document.querySelectorAll('.topic-choice').forEach(x=>{const active=x===b;x.classList.toggle('active',active);x.setAttribute('aria-pressed',String(active))});$('selectedTopicLabel').textContent=topicLabels[selectedTopic];});
 $('start').onclick=start;$('weakBtn').onclick=startWeak;$('next').onclick=next;$('speak').onclick=speak;
 $('reset').onclick=()=>{if(confirm('Точно сбросить весь прогресс и звёзды?')){data={total:0,correct:0,streak:0,topics:{},weak:[],xp:0,stars:0,unlocked:[]};streak=0;save()}};
