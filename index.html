@@ -46,7 +46,6 @@ select{min-width:190px;cursor:pointer;background:#fff}label{font-weight:750}
 <div class="row" style="margin-bottom:13px"><button class="mode active" data-mode="ten">✏️ 10 заданий</button><button class="mode" data-mode="choice">🎯 4 варианта ответа</button><button id="weakBtn" class="secondary">🔁 Повторить сложное</button></div>
 <h2 style="font-size:16px;margin:2px 0 9px">📚 Выбери тему</h2>
 <div class="topic-choices" id="topicChoices">
-<button type="button" class="topic-choice active" data-topic="mix" aria-pressed="true"><span class="topic-icon">🌈</span> Все темы</button>
 <button type="button" class="topic-choice" data-topic="add" aria-pressed="false"><span class="topic-icon">➕</span> Сложение</button>
 <button type="button" class="topic-choice" data-topic="sub" aria-pressed="false"><span class="topic-icon">➖</span> Вычитание</button>
 <button type="button" class="topic-choice" data-topic="compare" aria-pressed="false"><span class="topic-icon">⚖️</span> Сравнение</button>
@@ -72,7 +71,7 @@ select{min-width:190px;cursor:pointer;background:#fff}label{font-weight:750}
 <script>
 const names={add:'Сложение',sub:'Вычитание',compare:'Сравнение',multiply:'Умножение',word:'Задачи',logic:'Логика'};
 const $=id=>document.getElementById(id);
-let mode='ten',tasks=[],idx=0,correct=0,answered=false,selectedTopic='mix';
+let mode='ten',tasks=[],idx=0,correct=0,answered=false,selectedTopic='add';
 let data;
 try{data=JSON.parse(localStorage.getItem('maximMathProgress')||'{}')}catch(e){data={}}
 data={total:0,correct:0,streak:0,topics:{},weak:[],xp:0,stars:0,unlocked:[],...data};
@@ -126,8 +125,11 @@ function renderStats(){
 }
 function speak(){let t=tasks[idx];if(!t)return;let u=new SpeechSynthesisUtterance(t.q);u.lang='ru-RU';speechSynthesis.cancel();speechSynthesis.speak(u)}
 document.querySelectorAll('.mode').forEach(b=>b.onclick=()=>{mode=b.dataset.mode;document.querySelectorAll('.mode').forEach(x=>x.classList.toggle('active',x===b));$('answers').innerHTML='';$('feedback').className='feedback hidden';$('prompt').textContent='Режим выбран. Нажми «Начать игру»!'});
-const topicLabels={mix:'Выбраны все темы',add:'Сложение до 100',sub:'Вычитание до 100',compare:'Сравнение чисел',multiply:'Умножение',word:'Текстовые задачи',logic:'Логические задачи'};
+const topicLabels={add:'Сложение до 100',sub:'Вычитание до 100',compare:'Сравнение чисел',multiply:'Умножение',word:'Текстовые задачи',logic:'Логические задачи'};
 document.querySelectorAll('.topic-choice').forEach(b=>b.onclick=()=>{selectedTopic=b.dataset.topic;document.querySelectorAll('.topic-choice').forEach(x=>{const active=x===b;x.classList.toggle('active',active);x.setAttribute('aria-pressed',String(active))});$('selectedTopicLabel').textContent=topicLabels[selectedTopic];});
+document.querySelector('.topic-choice[data-topic="add"]').classList.add('active');
+document.querySelector('.topic-choice[data-topic="add"]').setAttribute('aria-pressed','true');
+$('selectedTopicLabel').textContent=topicLabels.add;
 $('start').onclick=start;$('weakBtn').onclick=startWeak;$('next').onclick=next;$('speak').onclick=speak;
 $('reset').onclick=()=>{if(confirm('Точно сбросить весь прогресс и звёзды?')){data={total:0,correct:0,streak:0,topics:{},weak:[],xp:0,stars:0,unlocked:[]};streak=0;save()}};
 renderStats();
